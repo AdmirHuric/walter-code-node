@@ -1,5 +1,8 @@
 import {Document} from "mongoose";
 
 export default interface IShoppingCart extends Document {
-    title: string;
+    name: string;
+    userId: string;
+    createdAt: Date;
+    products: any[];
 }

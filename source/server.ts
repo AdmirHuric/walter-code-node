@@ -11,7 +11,7 @@ const NAMESPACE = "Server";
 const router = express();
 
 /** Connect to Mongo */
-mongoose.connect('mongodb://mongo:27017/shopping', {useNewUrlParser: true})
+mongoose.connect(`${config.mongo.hostname}/${config.mongo.dbname}`, config.mongo.options)
     .then((result) => {
       logging.info(NAMESPACE, 'Connected to mongo DB', null);
     })

@@ -52,36 +52,30 @@ const login = (req: Request, res: Response, next: NextFunction) => {
     User.find({username})
         .exec()
         .then((response: any[]) => {
-            if (response.length !== 1) {
-                return res.status(401).json({
-                    message: 'Unauthorized'
-                });
-            }
 
             const user = response[0];
 
             bcryptjs.compare(password, user.password, (error, result) => {
-                if (error) {
-                    logging.error(NAMESPACE, error.message, error);
+                if (error || !result) {
+                    logging.error(NAMESPACE, error && error.message, error);
                     return res.status(401).json({
                         message: 'Unauthorized'
                     });
-                } else if (result) {
-                    signJWT(user, (error, token) => {
-                        if (error) {
-                            logging.error(NAMESPACE, error.message, error);
-                            return res.status(401).json({
-                                message: 'Unauthorized',
-                                error
-                            });
-                        } else if (token) {
-                            return res.status(200).json({
-                                message: 'Auth successful',
-                                token
-                            })
-                        }
-                    });
                 }
+                signJWT(user, (error, token) => {
+                    if (error) {
+                        logging.error(NAMESPACE, error.message, error);
+                        return res.status(401).json({
+                            message: 'Unauthorized',
+                            error
+                        });
+                    } else if (token) {
+                        return res.status(200).json({
+                            message: 'Auth successful',
+                            token
+                        });
+                    }
+                });
             });
         })
         .catch((error: any) => {
@@ -93,8 +87,46 @@ const login = (req: Request, res: Response, next: NextFunction) => {
         });
 };
 
+const changePassword = (req: Request, res: Response, next: NextFunction) => {
+    const {password} = req.body;
+    const {jwt} = res.locals;
+
+    if (!jwt.username) {
+        return res.status(404).json({
+            message: 'Could not find user'
+        });
+    }
+
+    bcryptjs.hash(password, 10, (hashError, hash) => {
+        if (hashError) {
+            return res.status(500).json({
+                message: hashError.message,
+                error: hashError
+            });
+        }
+
+        User.findOneAndUpdate(
+            {username: jwt.username},
+            {password: hash},
+            {returnOriginal: false},
+            (error, response) => {
+                if (error) {
+                    return res.status(500).json({
+                        message: error.message,
+                        error
+                    });
+                }
+
+                return res.status(200).json({
+                    message: "Password successfully updated"
+                });
+            })
+    });
+}
+
 export default {
     validateToken,
     register,
-    login
+    login,
+    changePassword
 }

@@ -5,7 +5,7 @@
   "main": "source/server.ts",
   "scripts": {
     "build": "rm -rf build/ && tsc -p .",
-    "dockerize": "docker system prune -a && docker build -t walter-code-node . && docker-compose up"
+    "dockerize": "docker build -t walter-code-node . && docker-compose up"
   },
   "repository": {
     "type": "git",
